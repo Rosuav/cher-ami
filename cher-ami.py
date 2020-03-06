@@ -67,6 +67,9 @@ def stream_from_friends():
 			# TODO: If it's been more than a minute, ping the timeline for any
 			# we missed.
 			continue
+		if "retweeted_status" in tweet:
+			if not tweet["is_quote_status"]: continue # Ignore plain retweets
+			# Hopefully a quoting-retweet will still get shown. TODO: Show the quoted tweet too.
 		if "id" in tweet:
 			# TODO: Remember the ID so we don't repeat this one
 			print_tweet(tweet)
