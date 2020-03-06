@@ -26,7 +26,13 @@ def print_tweet(tweet):
 	* Show tweet["source"] on request??
 	"""
 	try:
+		# Streaming mode doesn't include the full_text. It will show short tweets
+		# with just "text", and longer ones with an "extended_tweet" that includes
+		# the full text.
+		if "extended_tweet" in tweet:
+			tweet.update(tweet["extended_tweet"])
 		if "full_text" not in tweet: tweet["full_text"] = tweet["text"]
+
 		print("@" + tweet["user"]["screen_name"] + ": " + tweet["full_text"])
 	except Exception as e:
 		print("%%%%%%%%%%%%%%%%%%%%%%%%%%%")
@@ -64,5 +70,6 @@ def stream_from_friends():
 		if "id" in tweet:
 			# TODO: Remember the ID so we don't repeat this one
 			print_tweet(tweet)
+			# pprint(tweet)
 	print("End of stream")
 stream_from_friends()
