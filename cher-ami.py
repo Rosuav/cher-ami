@@ -17,7 +17,15 @@ auth = OAuth(*read_token_file(CREDENTIALS_FILE), TWITTER_CLIENT_ID, TWITTER_CLIE
 twitter = Twitter(auth=auth)
 stream = TwitterStream(auth=auth, timeout=10)
 
-def print_tweet(tweet):
+def fix_extended_tweet(tweet):
+	# Streaming mode doesn't include the full_text. It will show short tweets
+	# with just "text", and longer ones with an "extended_tweet" that includes
+	# the full text.
+	if "extended_tweet" in tweet:
+		tweet.update(tweet["extended_tweet"])
+	if "full_text" not in tweet: tweet["full_text"] = tweet["text"]
+
+def print_tweet(tweet, indent=""):
 	"""TODO:
 	* Put a marker in bold at the start of the tweet, to properly distinguish them
 	* Convert URLs using tweet["entities"]["urls"][*]["display_url"]
@@ -28,23 +36,19 @@ def print_tweet(tweet):
 	* Show tweet["source"] on request??
 	"""
 	try:
-		# Streaming mode doesn't include the full_text. It will show short tweets
-		# with just "text", and longer ones with an "extended_tweet" that includes
-		# the full text.
-		if "extended_tweet" in tweet:
-			tweet.update(tweet["extended_tweet"])
-		if "full_text" not in tweet: tweet["full_text"] = tweet["text"]
-
+		fix_extended_tweet(tweet)
 		# TODO: If it's a poll, show the options, or at least show that it's a poll.
-		label = "@" + tweet["user"]["screen_name"] + ": "
-		indent = " " * len(label)
+		label = indent + "@" + tweet["user"]["screen_name"] + ": "
+		wrapper = textwrap.TextWrapper(
+			initial_indent=label,
+			subsequent_indent=" " * len(label),
+			width=shutil.get_terminal_size().columns,
+		)
 		for line in tweet["full_text"].splitlines():
-			print(textwrap.TextWrapper(
-				initial_indent=label,
-				subsequent_indent=indent,
-				width=shutil.get_terminal_size().columns,
-			).fill(line))
-			label = indent # For subsequent lines, just indent them
+			print(wrapper.fill(line))
+			wrapper.initial_indent = wrapper.subsequent_indent # For subsequent lines, just indent them
+		if "quoted_status" in tweet:
+			print_tweet(tweet["quoted_status"], indent=" " * len(label))
 	except Exception as e:
 		print("%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 		pprint(tweet)
