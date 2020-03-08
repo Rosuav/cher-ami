@@ -39,11 +39,14 @@ def print_tweet(tweet):
 		# TODO: Handle tweets with embedded newlines. Maybe indent wrapped or split
 		# lines the same distance as "@screenname: " ?
 		label = "@" + tweet["user"]["screen_name"] + ": "
-		print(textwrap.TextWrapper(
-			initial_indent=label,
-			subsequent_indent=" "*len(label),
-			width=shutil.get_terminal_size().columns,
-		).fill(tweet["full_text"]))
+		indent = " " * len(label)
+		for line in tweet["full_text"].splitlines():
+			print(textwrap.TextWrapper(
+				initial_indent=label,
+				subsequent_indent=indent,
+				width=shutil.get_terminal_size().columns,
+			).fill(line))
+			label = indent # For subsequent lines, just indent them
 	except Exception as e:
 		print("%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 		pprint(tweet)
