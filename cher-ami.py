@@ -33,6 +33,9 @@ def print_tweet(tweet):
 			tweet.update(tweet["extended_tweet"])
 		if "full_text" not in tweet: tweet["full_text"] = tweet["text"]
 
+		# TODO: If it's a poll, show the options, or at least show that it's a poll.
+		# TODO: Handle tweets with embedded newlines. Maybe indent wrapped or split
+		# lines the same distance as "@screenname: " ?
 		print("@" + tweet["user"]["screen_name"] + ": " + tweet["full_text"])
 	except Exception as e:
 		print("%%%%%%%%%%%%%%%%%%%%%%%%%%%")
@@ -76,3 +79,4 @@ def stream_from_friends():
 			# pprint(tweet)
 	print("End of stream")
 stream_from_friends()
+# TODO: Handle reconnect logic
