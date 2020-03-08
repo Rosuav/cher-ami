@@ -1,5 +1,7 @@
 import os
+import shutil
 import sys
+import textwrap
 import time
 from pprint import pprint
 sys.path.append("../mustard-mine") # Hack: Lift credentials from Mustard Mine if we don't have our own
@@ -36,7 +38,12 @@ def print_tweet(tweet):
 		# TODO: If it's a poll, show the options, or at least show that it's a poll.
 		# TODO: Handle tweets with embedded newlines. Maybe indent wrapped or split
 		# lines the same distance as "@screenname: " ?
-		print("@" + tweet["user"]["screen_name"] + ": " + tweet["full_text"])
+		label = "@" + tweet["user"]["screen_name"] + ": "
+		print(textwrap.TextWrapper(
+			initial_indent=label,
+			subsequent_indent=" "*len(label),
+			width=shutil.get_terminal_size().columns,
+		).fill(tweet["full_text"]))
 	except Exception as e:
 		print("%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 		pprint(tweet)
