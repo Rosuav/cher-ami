@@ -47,6 +47,9 @@ def print_tweet(tweet, indent=""):
 		for line in tweet["full_text"].splitlines():
 			print(wrapper.fill(line))
 			wrapper.initial_indent = wrapper.subsequent_indent # For subsequent lines, just indent them
+		# Some types of quoted tweets aren't currently getting shown properly.
+		# See if there's a difference between (a) clicking Retweet and then
+		# adding a message, and (b) clicking Tweet, and pasting in a tweet URL.
 		if "quoted_status" in tweet:
 			print_tweet(tweet["quoted_status"], indent=" " * len(label))
 	except Exception as e:
@@ -54,12 +57,13 @@ def print_tweet(tweet, indent=""):
 		pprint(tweet)
 		raise
 
-tweet = None
-for tweet in reversed(twitter.statuses.home_timeline(count=10, tweet_mode="extended")):
-	print_tweet(tweet)
-if tweet is None: print("No tweets, prolly gonna crash now")
+seen_tweets = set()
+def catchup(count):
+	for tweet in reversed(twitter.statuses.home_timeline(count=count, tweet_mode="extended")):
+		if tweet["id"] in seen_tweets: continue
+		seen_tweets.add(tweet["id"])
+		print_tweet(tweet)
 
-# pprint(tweet)
 def spam_requests(last):
 	# This would work, but the home_timeline API is rate-limited to 15 every 15 minutes.
 	# So at best, we could get a 60-secondly poll.
@@ -69,12 +73,10 @@ def spam_requests(last):
 		for tweet in reversed(twitter.statuses.home_timeline(since_id=last, count=2, tweet_mode="extended")):
 			last = tweet["id"]
 			print_tweet(tweet)
-# spam_requests(tweet["id"])
 
 def stream_from_friends():
 	# TODO: Get all pages
 	following = twitter.friends.ids()["ids"]
-	print("---------")
 	# TODO: Filter out replies to people I follow (unless I also follow the person)
 	# Be sure to include replies to *me* from anyone, or mentions of me.
 	for tweet in stream.statuses.filter(follow=",".join(str(f) for f in following), tweet_mode="extended"):
@@ -86,9 +88,14 @@ def stream_from_friends():
 			if not tweet["is_quote_status"]: continue # Ignore plain retweets
 			# Hopefully a quoting-retweet will still get shown.
 		if "id" in tweet:
-			# TODO: Remember the ID so we don't repeat this one
+			seen_tweets.add(tweet["id"])
 			print_tweet(tweet)
 			# pprint(tweet)
 	print("End of stream")
-stream_from_friends()
-# TODO: Handle reconnect logic
+
+catchup(25)
+print("---------")
+while True:
+	stream_from_friends()
+	# After disconnecting, do a timeline check to see if we missed any
+	catchup(10)
