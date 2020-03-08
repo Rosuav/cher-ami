@@ -84,7 +84,7 @@ def stream_from_friends():
 			continue
 		if "retweeted_status" in tweet:
 			if not tweet["is_quote_status"]: continue # Ignore plain retweets
-			# Hopefully a quoting-retweet will still get shown. TODO: Show the quoted tweet too.
+			# Hopefully a quoting-retweet will still get shown.
 		if "id" in tweet:
 			# TODO: Remember the ID so we don't repeat this one
 			print_tweet(tweet)
