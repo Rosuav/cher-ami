@@ -36,8 +36,6 @@ def print_tweet(tweet):
 		if "full_text" not in tweet: tweet["full_text"] = tweet["text"]
 
 		# TODO: If it's a poll, show the options, or at least show that it's a poll.
-		# TODO: Handle tweets with embedded newlines. Maybe indent wrapped or split
-		# lines the same distance as "@screenname: " ?
 		label = "@" + tweet["user"]["screen_name"] + ": "
 		indent = " " * len(label)
 		for line in tweet["full_text"].splitlines():
