@@ -104,9 +104,14 @@ def stream_from_friends():
 			# pprint(tweet)
 	print("End of stream")
 
-catchup(25)
-print("---------")
-while True:
-	stream_from_friends()
-	# After disconnecting, do a timeline check to see if we missed any
-	catchup(10)
+def main():
+	catchup(25)
+	print("---------")
+	try:
+		while True:
+			stream_from_friends()
+			# After disconnecting, do a timeline check to see if we missed any
+			catchup(10)
+	except KeyboardInterrupt:
+		pass # Normal termination
+main()
