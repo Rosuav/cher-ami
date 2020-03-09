@@ -29,12 +29,10 @@ def fix_extended_tweet(tweet):
 
 def print_tweet(tweet, indent=""):
 	"""TODO:
-	* Put a marker in bold at the start of the tweet, to properly distinguish them
 	* Convert URLs using tweet["entities"]["urls"][*]["display_url"]
 	* Retain the expanded_url from the above and react to clicks
 	* Figure out display_text_range
 	* Retain the ID. If the marker is clicked, open the tweet in a browser.
-	* Show quoted tweets.
 	* Show tweet["source"] on request??
 	"""
 	try:
