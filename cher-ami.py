@@ -90,6 +90,7 @@ def stream_from_friends():
 			# we missed.
 			continue
 		if "retweeted_status" in tweet:
+			# TODO: Show retweets if we didn't see the original, or if it's quoting (not a plain RT)
 			if not tweet["is_quote_status"]: continue # Ignore plain retweets
 			# Hopefully a quoting-retweet will still get shown.
 		if "id" not in tweet: continue # Not actually a tweet (and might be followed by the connection closing)
