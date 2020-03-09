@@ -26,11 +26,13 @@ def fix_extended_tweet(tweet):
 	if "extended_tweet" in tweet:
 		tweet.update(tweet["extended_tweet"])
 	if "full_text" not in tweet: tweet["full_text"] = tweet["text"]
+	for url in reversed(tweet["entities"]["urls"]):
+		start, end = url["indices"]
+		tweet["full_text"] = tweet["full_text"][:start] + url["expanded_url"] + tweet["full_text"][end:]
 
 def print_tweet(tweet, indent=""):
 	"""TODO:
-	* Convert URLs using tweet["entities"]["urls"][*]["display_url"]
-	* Retain the expanded_url from the above and react to clicks
+	* Convert URLs using display_url, but retain the expanded_url and react to clicks
 	* Figure out display_text_range
 	* Retain the ID. If the marker is clicked, open the tweet in a browser.
 	* Show tweet["source"] on request??
