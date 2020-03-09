@@ -17,6 +17,8 @@ auth = OAuth(*read_token_file(CREDENTIALS_FILE), TWITTER_CLIENT_ID, TWITTER_CLIE
 twitter = Twitter(auth=auth)
 stream = TwitterStream(auth=auth, timeout=10)
 
+who_am_i = twitter.account.verify_credentials()
+
 def fix_extended_tweet(tweet):
 	# Streaming mode doesn't include the full_text. It will show short tweets
 	# with just "text", and longer ones with an "extended_tweet" that includes
@@ -36,8 +38,11 @@ def print_tweet(tweet, indent=""):
 	* Show tweet["source"] on request??
 	"""
 	try:
+		# if tweet["user"]["screen_name"] == "Twitch": pprint(tweet)
 		fix_extended_tweet(tweet)
 		# TODO: If it's a poll, show the options, or at least show that it's a poll.
+		# TODO: Retweets of long tweets are (sometimes?) getting shown in truncated
+		# form. Grab the full_text from the retweeted_status and use that instead.
 		label = indent + "@" + tweet["user"]["screen_name"] + ": "
 		wrapper = textwrap.TextWrapper(
 			initial_indent=label,
@@ -75,10 +80,9 @@ def spam_requests(last):
 			print_tweet(tweet)
 
 def stream_from_friends():
-	# TODO: Get all pages
+	# TODO: Get all pages of friends
+	# TODO: Notice if you follow/unfollow someone, and adjust this (or just return and re-call)
 	following = twitter.friends.ids()["ids"]
-	# TODO: Filter out replies to people I follow (unless I also follow the person)
-	# Be sure to include replies to *me* from anyone, or mentions of me.
 	for tweet in stream.statuses.filter(follow=",".join(str(f) for f in following), tweet_mode="extended"):
 		if tweet is Timeout:
 			# TODO: If it's been more than a minute, ping the timeline for any
@@ -87,7 +91,13 @@ def stream_from_friends():
 		if "retweeted_status" in tweet:
 			if not tweet["is_quote_status"]: continue # Ignore plain retweets
 			# Hopefully a quoting-retweet will still get shown.
-		if "id" in tweet:
+		if "id" not in tweet: continue
+		# Figure out if this should be shown or not. If I sent it, show it.
+		# If someone I follow sent it, show it. If it is a reply to something
+		# I sent, show it. If it mentions me, show it. Otherwise don't.
+		user = tweet["user"]["id"]
+		if user == who_am_i["id"] or user in following or \
+				any(m["id"] in following for m in tweet["entities"]["user_mentions"]):
 			seen_tweets.add(tweet["id"])
 			print_tweet(tweet)
 			# pprint(tweet)
