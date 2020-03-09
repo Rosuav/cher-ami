@@ -38,9 +38,10 @@ def print_tweet(tweet, indent=""):
 	* Show tweet["source"] on request??
 	"""
 	try:
-		# if tweet["user"]["screen_name"] == "Twitch": pprint(tweet)
+		# if tweet["user"]["screen_name"] == "Rosuav": pprint(tweet)
 		fix_extended_tweet(tweet)
 		# TODO: If it's a poll, show the options, or at least show that it's a poll.
+		# (Polls should be shown as a form of media, same as attached images.)
 		# TODO: Retweets of long tweets are (sometimes?) getting shown in truncated
 		# form. Grab the full_text from the retweeted_status and use that instead.
 		label = indent + "@" + tweet["user"]["screen_name"] + ": "
@@ -82,7 +83,7 @@ def spam_requests(last):
 def stream_from_friends():
 	# TODO: Get all pages of friends
 	# TODO: Notice if you follow/unfollow someone, and adjust this (or just return and re-call)
-	following = twitter.friends.ids()["ids"]
+	following = twitter.friends.ids()["ids"] + [who_am_i["id"]]
 	for tweet in stream.statuses.filter(follow=",".join(str(f) for f in following), tweet_mode="extended"):
 		if tweet is Timeout:
 			# TODO: If it's been more than a minute, ping the timeline for any
@@ -91,13 +92,13 @@ def stream_from_friends():
 		if "retweeted_status" in tweet:
 			if not tweet["is_quote_status"]: continue # Ignore plain retweets
 			# Hopefully a quoting-retweet will still get shown.
-		if "id" not in tweet: continue
+		if "id" not in tweet: continue # Not actually a tweet (and might be followed by the connection closing)
 		# Figure out if this should be shown or not. If I sent it, show it.
 		# If someone I follow sent it, show it. If it is a reply to something
 		# I sent, show it. If it mentions me, show it. Otherwise don't.
 		user = tweet["user"]["id"]
-		if user == who_am_i["id"] or user in following or \
-				any(m["id"] in following for m in tweet["entities"]["user_mentions"]):
+		if user in following or \
+				who_am_i["id"] in [m["id"] for m in tweet["entities"]["user_mentions"]]:
 			seen_tweets.add(tweet["id"])
 			print_tweet(tweet)
 			# pprint(tweet)
