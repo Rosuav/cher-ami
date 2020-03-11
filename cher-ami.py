@@ -102,7 +102,7 @@ def stream_from_friends():
 			seen_tweets.add(tweet["id"])
 			print_tweet(tweet)
 			# pprint(tweet)
-	print("End of stream")
+	print("End of stream", time.time())
 
 def main():
 	catchup(25)
