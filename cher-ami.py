@@ -97,9 +97,8 @@ def stream_from_friends():
 		# Figure out if this should be shown or not. If I sent it, show it.
 		# If someone I follow sent it, show it. If it is a reply to something
 		# I sent, show it. If it mentions me, show it. Otherwise don't.
-		user = tweet["user"]["id"]
-		if user in following or \
-				who_am_i["id"] in [m["id"] for m in tweet["entities"]["user_mentions"]]:
+		mentions = [m["id"] for m in tweet["entities"]["user_mentions"]]
+		if tweet["user"]["id"] in following or who_am_i["id"] not in mentions:
 			seen_tweets.add(tweet["id"])
 			print_tweet(tweet)
 			# pprint(tweet)
