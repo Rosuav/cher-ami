@@ -71,8 +71,8 @@ def catchup(count):
 	for tweet in reversed(twitter.statuses.home_timeline(count=count, tweet_mode="extended")):
 		if tweet["id"] in seen_tweets: continue
 		seen_tweets.add(tweet["id"])
-		print_tweet(tweet)
 		json.dump(tweet, log); print("", file=log)
+		print_tweet(tweet)
 		print("-- accepted: catchup --", file=log)
 
 def spam_requests(last):
@@ -86,7 +86,6 @@ def spam_requests(last):
 			print_tweet(tweet)
 
 def stream_from_friends():
-	# TODO: Get all pages of friends
 	# TODO: Notice if you follow/unfollow someone, and adjust this (or just return and re-call)
 	following = twitter.friends.ids()["ids"] + [who_am_i["id"]]
 	for tweet in stream.statuses.filter(follow=",".join(str(f) for f in following), tweet_mode="extended"):
@@ -97,8 +96,8 @@ def stream_from_friends():
 		if "id" not in tweet: continue # Not actually a tweet (and might be followed by the connection closing)
 		json.dump(tweet, log); print("", file=log)
 		if "retweeted_status" in tweet:
-			# TODO: Show retweets if we didn't see the original, or if it's quoting (not a plain RT)
-			if not tweet["is_quote_status"]: continue # Ignore plain retweets
+			if not tweet["is_quote_status"] and tweet["retweeted_status"]["id"] in seen_tweets:
+				continue # Ignore plain retweets where we've seen the original
 			# Hopefully a quoting-retweet will still get shown.
 		# Figure out if this should be shown or not. If I sent it, show it.
 		# If someone I follow sent it, show it. If it is a reply to something
@@ -111,6 +110,7 @@ def stream_from_friends():
 		mentions = [m["id"] for m in tweet["entities"]["user_mentions"]]
 		if tweet["user"]["id"] in following or who_am_i["id"] in mentions:
 			seen_tweets.add(tweet["id"])
+			if "retweeted_status" in tweet: seen_tweets.add(tweet["retweeted_status"]["id"])
 			print_tweet(tweet)
 			if who_am_i["id"] in mentions: print("-- accepted: mentions me --", file=log)
 			else: print("-- accepted: author followed --", file=log)
