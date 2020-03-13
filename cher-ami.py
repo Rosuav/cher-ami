@@ -102,11 +102,9 @@ def stream_from_friends():
 		# Figure out if this should be shown or not. If I sent it, show it.
 		# If someone I follow sent it, show it. If it is a reply to something
 		# I sent, show it. If it mentions me, show it. Otherwise don't.
-		if (tweet["user"]["id"] != who_am_i["id"]
-				and tweet["in_reply_to_user_id"] is not None
-				and tweet["in_reply_to_user_id"] != who_am_i["id"]):
-			# Someone else replying to someone other than me. Ignore it.
-			continue
+		from_me = tweet["user"]["id"] == who_am_i["id"]
+		open_or_to_me = tweet["in_reply_to_user_id"] in (None, who_am_i["id"])
+		if not from_me and not open_or_to_me: continue
 		mentions = [m["id"] for m in tweet["entities"]["user_mentions"]]
 		if tweet["user"]["id"] in following or who_am_i["id"] in mentions:
 			seen_tweets.add(tweet["id"])
