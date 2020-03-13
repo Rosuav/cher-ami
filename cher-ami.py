@@ -19,6 +19,7 @@ twitter = Twitter(auth=auth)
 stream = TwitterStream(auth=auth, timeout=10)
 
 who_am_i = twitter.account.verify_credentials()
+my_id = who_am_i["id"]
 
 def fix_extended_tweet(tweet):
 	# Streaming mode doesn't include the full_text. It will show short tweets
@@ -87,7 +88,7 @@ def spam_requests(last):
 
 def stream_from_friends():
 	# TODO: Notice if you follow/unfollow someone, and adjust this (or just return and re-call)
-	following = twitter.friends.ids()["ids"] + [who_am_i["id"]]
+	following = twitter.friends.ids()["ids"] + [my_id]
 	for tweet in stream.statuses.filter(follow=",".join(str(f) for f in following), tweet_mode="extended"):
 		if tweet is Timeout:
 			# TODO: If it's been more than a minute, ping the timeline for any
@@ -102,10 +103,10 @@ def stream_from_friends():
 		# Figure out if this should be shown or not. If I sent it, show it.
 		# If someone I follow sent it, show it. If it is a reply to something
 		# I sent, show it. If it mentions me, show it. Otherwise don't.
-		from_me = tweet["user"]["id"] == who_am_i["id"]
-		open_or_to_me = tweet["in_reply_to_user_id"] in (None, who_am_i["id"])
+		from_me = tweet["user"]["id"] == my_id
+		open_or_to_me = tweet["in_reply_to_user_id"] in (None, my_id)
 		if not from_me and not open_or_to_me: continue
-		mentions_me = who_am_i["id"] in [m["id"] for m in tweet["entities"]["user_mentions"]]
+		mentions_me = my_id in [m["id"] for m in tweet["entities"]["user_mentions"]]
 		if tweet["user"]["id"] in following or mentions_me:
 			seen_tweets.add(tweet["id"])
 			if "retweeted_status" in tweet: seen_tweets.add(tweet["retweeted_status"]["id"])
