@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import sys
@@ -63,12 +64,15 @@ def print_tweet(tweet, indent=""):
 		pprint(tweet)
 		raise
 
+log = open("cher-ami.json", "a", buffering=1)
 seen_tweets = set()
 def catchup(count):
 	for tweet in reversed(twitter.statuses.home_timeline(count=count, tweet_mode="extended")):
 		if tweet["id"] in seen_tweets: continue
 		seen_tweets.add(tweet["id"])
 		print_tweet(tweet)
+		json.dump(tweet, log); print("", file=log)
+		print("-- accepted: catchup --", file=log)
 
 def spam_requests(last):
 	# This would work, but the home_timeline API is rate-limited to 15 every 15 minutes.
@@ -89,11 +93,12 @@ def stream_from_friends():
 			# TODO: If it's been more than a minute, ping the timeline for any
 			# we missed.
 			continue
+		if "id" not in tweet: continue # Not actually a tweet (and might be followed by the connection closing)
+		json.dump(tweet, log); print("", file=log)
 		if "retweeted_status" in tweet:
 			# TODO: Show retweets if we didn't see the original, or if it's quoting (not a plain RT)
 			if not tweet["is_quote_status"]: continue # Ignore plain retweets
 			# Hopefully a quoting-retweet will still get shown.
-		if "id" not in tweet: continue # Not actually a tweet (and might be followed by the connection closing)
 		# Figure out if this should be shown or not. If I sent it, show it.
 		# If someone I follow sent it, show it. If it is a reply to something
 		# I sent, show it. If it mentions me, show it. Otherwise don't.
@@ -106,6 +111,8 @@ def stream_from_friends():
 		if tweet["user"]["id"] in following or who_am_i["id"] in mentions:
 			seen_tweets.add(tweet["id"])
 			print_tweet(tweet)
+			if who_am_i["id"] in mentions: print("-- accepted: mentions me --", file=log)
+			else: print("-- accepted: author followed --", file=log)
 			# pprint(tweet)
 	print("End of stream", time.time())
 
