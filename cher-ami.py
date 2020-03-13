@@ -93,6 +93,7 @@ def spam_requests(last):
 def stream_from_friends():
 	# TODO: Notice if you follow/unfollow someone, and adjust this (or just return and re-call)
 	following = twitter.friends.ids()["ids"] + [my_id]
+	no_retweets = twitter.friendships.no_retweets.ids()
 	for tweet in stream.statuses.filter(follow=",".join(str(f) for f in following), tweet_mode="extended"):
 		if tweet is Timeout:
 			# TODO: If it's been more than a minute, ping the timeline for any
@@ -103,6 +104,7 @@ def stream_from_friends():
 		if "retweeted_status" in tweet:
 			if not tweet["is_quote_status"] and tweet["retweeted_status"]["id"] in seen_tweets:
 				continue # Ignore plain retweets where we've seen the original
+			if tweet["user"]["id"] in no_retweets: continue # User requested not to see their RTs
 			# Hopefully a quoting-retweet will still get shown.
 		# Figure out if this should be shown or not. If I sent it, show it.
 		# If someone I follow sent it and isn't a reply, show it. If it is
