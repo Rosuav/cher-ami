@@ -27,6 +27,7 @@ def fix_extended_tweet(tweet):
 	if "extended_tweet" in tweet:
 		tweet.update(tweet["extended_tweet"])
 	if "full_text" not in tweet: tweet["full_text"] = tweet["text"]
+	# TODO: Catch *all* URLs - for some reason, this only seems to catch one.
 	for url in reversed(tweet["entities"]["urls"]):
 		start, end = url["indices"]
 		tweet["full_text"] = tweet["full_text"][:start] + url["expanded_url"] + tweet["full_text"][end:]
