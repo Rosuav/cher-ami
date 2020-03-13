@@ -127,4 +127,5 @@ def main():
 			catchup(10)
 	except KeyboardInterrupt:
 		pass # Normal termination
-main()
+
+if __name__ == "__main__": main()
