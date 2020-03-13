@@ -101,19 +101,21 @@ def stream_from_friends():
 				continue # Ignore plain retweets where we've seen the original
 			# Hopefully a quoting-retweet will still get shown.
 		# Figure out if this should be shown or not. If I sent it, show it.
-		# If someone I follow sent it, show it. If it is a reply to something
-		# I sent, show it. If it mentions me, show it. Otherwise don't.
+		# If someone I follow sent it and isn't a reply, show it. If it is
+		# a reply to something I sent, show it. If it mentions me, show it.
+		# Otherwise don't. Note that a self-reply doesn't count as a reply.
 		from_me = tweet["user"]["id"] == my_id
-		open_or_to_me = tweet["in_reply_to_user_id"] in (None, my_id)
-		if not from_me and not open_or_to_me: continue
+		nonreply = tweet["in_reply_to_user_id"] is None
+		selfreply = tweet["in_reply_to_user_id"] == tweet["user"]["id"]
+		# I'm assuming that any reply to a tweet of mine will list me among the mentions.
 		mentions_me = my_id in [m["id"] for m in tweet["entities"]["user_mentions"]]
-		if tweet["user"]["id"] in following or mentions_me:
+		if from_me or mentions_me or (tweet["user"]["id"] in following and (nonreply or selfreply)):
 			seen_tweets.add(tweet["id"])
 			if "retweeted_status" in tweet: seen_tweets.add(tweet["retweeted_status"]["id"])
 			print_tweet(tweet)
+			if from_me: print("-- accepted: from me --", file=log)
 			if mentions_me: print("-- accepted: mentions me --", file=log)
-			else: print("-- accepted: author followed --", file=log)
-			# pprint(tweet)
+			else: print("-- accepted: author followed and %s --" % "non-reply" if nonreply else "self-reply", file=log)
 	print("End of stream", time.time())
 
 def main():
