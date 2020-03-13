@@ -36,12 +36,10 @@ def fix_extended_tweet(tweet):
 def print_tweet(tweet, indent=""):
 	"""TODO:
 	* Convert URLs using display_url, but retain the expanded_url and react to clicks
-	* Figure out display_text_range
 	* Retain the ID. If the marker is clicked, open the tweet in a browser.
 	* Show tweet["source"] on request??
 	"""
 	try:
-		# if tweet["user"]["screen_name"] == "Rosuav": pprint(tweet)
 		fix_extended_tweet(tweet)
 		# TODO: If it's a poll, show the options, or at least show that it's a poll.
 		# (Polls should be shown as a form of media, same as attached images.)
