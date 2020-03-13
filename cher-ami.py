@@ -7,7 +7,7 @@ import time
 from pprint import pprint
 sys.path.append("../mustard-mine") # Hack: Lift credentials from Mustard Mine if we don't have our own
 from config import TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET
-from twitter import OAuth, Twitter, read_token_file
+from twitter import OAuth, Twitter, oauth_dance, read_token_file
 from twitter.stream import TwitterStream, Timeout, HeartbeatTimeout, Hangup
 
 CREDENTIALS_FILE = os.path.expanduser('~/.cherami-login')
