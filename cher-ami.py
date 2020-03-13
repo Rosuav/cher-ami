@@ -105,12 +105,12 @@ def stream_from_friends():
 		from_me = tweet["user"]["id"] == who_am_i["id"]
 		open_or_to_me = tweet["in_reply_to_user_id"] in (None, who_am_i["id"])
 		if not from_me and not open_or_to_me: continue
-		mentions = [m["id"] for m in tweet["entities"]["user_mentions"]]
-		if tweet["user"]["id"] in following or who_am_i["id"] in mentions:
+		mentions_me = who_am_i["id"] in [m["id"] for m in tweet["entities"]["user_mentions"]]
+		if tweet["user"]["id"] in following or mentions_me:
 			seen_tweets.add(tweet["id"])
 			if "retweeted_status" in tweet: seen_tweets.add(tweet["retweeted_status"]["id"])
 			print_tweet(tweet)
-			if who_am_i["id"] in mentions: print("-- accepted: mentions me --", file=log)
+			if mentions_me: print("-- accepted: mentions me --", file=log)
 			else: print("-- accepted: author followed --", file=log)
 			# pprint(tweet)
 	print("End of stream", time.time())
