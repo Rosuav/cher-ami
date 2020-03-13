@@ -45,8 +45,12 @@ def print_tweet(tweet, indent=""):
 		fix_extended_tweet(tweet)
 		# TODO: If it's a poll, show the options, or at least show that it's a poll.
 		# (Polls should be shown as a form of media, same as attached images.)
-		# TODO: Retweets of long tweets are (sometimes?) getting shown in truncated
-		# form. Grab the full_text from the retweeted_status and use that instead.
+		if "retweeted_status" in tweet:
+			# Retweets have their own full_text, but it's often truncated. And
+			# yet, the "truncated" flag is False. Go figure.
+			fix_extended_tweet(tweet["retweeted_status"])
+			tweet["full_text"] = ("RT @" + tweet["retweeted_status"]["user"]["name"]
+				+ ": " + tweet["retweeted_status"]["full_text"])
 		label = indent + "@" + tweet["user"]["screen_name"] + ": "
 		wrapper = textwrap.TextWrapper(
 			initial_indent=label,
