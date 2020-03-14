@@ -47,7 +47,7 @@ def print_tweet(tweet, indent=""):
 			# Retweets have their own full_text, but it's often truncated. And
 			# yet, the "truncated" flag is False. Go figure.
 			fix_extended_tweet(tweet["retweeted_status"])
-			tweet["full_text"] = ("RT @" + tweet["retweeted_status"]["user"]["name"]
+			tweet["full_text"] = ("RT @" + tweet["retweeted_status"]["user"]["screen_name"]
 				+ ": " + tweet["retweeted_status"]["full_text"])
 		label = indent + "@" + tweet["user"]["screen_name"] + ": "
 		wrapper = textwrap.TextWrapper(
