@@ -29,6 +29,11 @@ def fix_extended_tweet(tweet):
 		tweet.update(tweet["extended_tweet"])
 	if "full_text" not in tweet: tweet["full_text"] = tweet["text"]
 	# FIXME: This sometimes doesn't catch every URL - some are left as t.co. Watch for an example.
+	# TODO: Also catch media entries. The indices will need to be merged with URLs.
+	# (Can I assume they'll never overlap? If so, build a mapping start=>replacement, sort, go.)
+	# tweet->extended_entities->media[*]->indices
+	# tweet->extended_entities->media[*]->video_info->variants[0]->url
+	# What if there are multiple variants?
 	for url in reversed(tweet["entities"]["urls"]):
 		start, end = url["indices"]
 		tweet["full_text"] = tweet["full_text"][:start] + url["expanded_url"] + tweet["full_text"][end:]
