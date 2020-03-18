@@ -8,12 +8,14 @@ def t():
 	tweet = json.loads(input("> "))
 
 def find(s):
+	global tweet, tweets
+	tweets = []
 	with open("cher-ami.json") as f:
 		for line in f:
 			if not line.startswith("{"): continue
 			tw = json.loads(line)
 			txt = tw.get("full_text", tw.get("text", ""))
 			if s in txt:
-				print(tw["created_at"], "@" + tw["user"]["screen_name"])
-				global tweet
+				print("[%d]" % len(tweets), tw["created_at"], "@" + tw["user"]["screen_name"])
+				tweets.append(tw)
 				tweet = tw
