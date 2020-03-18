@@ -112,13 +112,21 @@ def stream_from_friends():
 		# Figure out if this should be shown or not. If I sent it, show it.
 		# If someone I follow sent it and isn't a reply, show it. If it is
 		# a reply to something I sent, show it. If it mentions me, show it.
-		# Otherwise don't. Note that a self-reply doesn't count as a reply.
+		# Otherwise don't.
 		from_me = tweet["user"]["id"] == my_id
 		nonreply = tweet["in_reply_to_user_id"] is None
-		selfreply = tweet["in_reply_to_user_id"] == tweet["user"]["id"]
+		if tweet["in_reply_to_user_id"] == tweet["user"]["id"]:
+			# For self-replies, look for threads that start with something we would have
+			# looked at. If you reply to someone else, then reply to your own reply, that
+			# should be taken as a reply to the original someone else.
+			if tweet["in_reply_to_status_id"] in seen_tweets: nonreply = True # Easy - we showed that one!
+			# ? I think this will work. If you aren't mentioning anyone else, it's probably
+			# a thread, not a reply to someone else. Ultimately, what I want to do is to
+			# ask "Would we have shown the tweet that this is a reply to?".
+			elif len(tweet["entities"]["user_mentions"]) == 1: nonreply = True
 		# I'm assuming that any reply to a tweet of mine will list me among the mentions.
 		mentions_me = my_id in [m["id"] for m in tweet["entities"]["user_mentions"]]
-		if from_me or mentions_me or (tweet["user"]["id"] in following and (nonreply or selfreply)):
+		if from_me or mentions_me or (tweet["user"]["id"] in following and nonreply):
 			seen_tweets.add(tweet["id"])
 			if "retweeted_status" in tweet: seen_tweets.add(tweet["retweeted_status"]["id"])
 			print_tweet(tweet)
