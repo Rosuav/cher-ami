@@ -95,6 +95,8 @@ def spam_requests(last):
 
 def stream_from_friends():
 	# TODO: Notice if you follow/unfollow someone, and adjust this (or just return and re-call)
+	# TODO: Switch to the Labs API instead and see if it copes with private accounts.
+	# This API doesn't, which means that tweets from private accounts are only seen in catchup.
 	following = twitter.friends.ids()["ids"] + [my_id]
 	no_retweets = twitter.friendships.no_retweets.ids()
 	for tweet in stream.statuses.filter(follow=",".join(str(f) for f in following), tweet_mode="extended"):
