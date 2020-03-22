@@ -59,6 +59,7 @@ def print_tweet(tweet, indent=""):
 			initial_indent=label,
 			subsequent_indent=" " * len(label),
 			width=shutil.get_terminal_size().columns,
+			break_long_words=False, break_on_hyphens=False, # Stop URLs from breaking
 		)
 		for line in tweet["full_text"].splitlines():
 			print(wrapper.fill(line))
