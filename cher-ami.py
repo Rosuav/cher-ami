@@ -125,8 +125,10 @@ def stream_from_friends():
 			if tweet["in_reply_to_status_id"] in seen_tweets: nonreply = True # Easy - we showed that one!
 			# ? I think this will work. If you aren't mentioning anyone else, it's probably
 			# a thread, not a reply to someone else. Ultimately, what I want to do is to
-			# ask "Would we have shown the tweet that this is a reply to?".
-			elif len(tweet["entities"]["user_mentions"]) == 1: nonreply = True
+			# ask "Would we have shown the tweet that this is a reply to?". I'm not sure
+			# why, but sometimes you are in your own mention list and sometimes not.
+			elif {m['id'] for m in tweet["entities"]["user_mentions"]} <= {tweet["user"]["id"]}:
+				nonreply = True
 		# I'm assuming that any reply to a tweet of mine will list me among the mentions.
 		mentions_me = my_id in [m["id"] for m in tweet["entities"]["user_mentions"]]
 		if from_me or mentions_me or (tweet["user"]["id"] in following and nonreply):
