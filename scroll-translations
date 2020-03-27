@@ -1,0 +1,12 @@
+! Define some scroll actions on keys that are unlikely to be a problem
+! This means that "xdotool key ctrl+F13" will scroll up, and "alt+F13" down.
+! Activate this file with "xrdb -merge scroll-translations"
+! Unfortunately it doesn't work in xfce4-terminal, gnome-terminal,
+! mate-terminal, or rxvt-unicode. Works in xterm though...
+
+! xterm -xrm 'XTerm.VT100.translations: #override Ctrl<Key>F13: scroll-back(3,line) \n Alt<Key>F13: scroll-forw(3,line)'
+
+XTerm.VT100.translations: #override \
+	Ctrl<Key>F12: scroll-back(1,line) \n\
+	Ctrl<Key>F13: scroll-back(3,line) \n\
+	Alt<Key>F13: scroll-forw(3,line)

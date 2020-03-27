@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, subprocess
 print("Mouse demo")
 print("Click on any letter")
 import tty, termios
@@ -34,7 +34,11 @@ try:
 				params = [int(x) for x in params.decode().split(";")]
 				is_release = chr == b"m"
 				btn, x, y = params
-				print(btn, x, y, "up" if is_release else "down")
+				if btn == 64:
+					subprocess.call(["xdotool", "key", "ctrl+F13"])
+				elif btn == 65:
+					subprocess.call(["xdotool", "key", "alt+F13"])
+				else: print(btn, x, y, "up" if is_release else "down")
 				continue
 			elif command == b"I": # Mode 1004 (independent of the mouse actions)
 				print("Focus gained")
