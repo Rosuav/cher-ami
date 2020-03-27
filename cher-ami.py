@@ -128,7 +128,12 @@ def interesting_tweet(tweet):
 			return True, "author followed and pure self-reply"
 	return False, "no reason to display it"
 
+last_catchup = 0.0
 def catchup(count):
+	global last_catchup
+	t = time.time()
+	if t > last_catchup + 180: last_catchup = t
+	else: return # Been less than three minutes? No need to catch up.
 	for tweet in reversed(twitter.statuses.home_timeline(count=count, tweet_mode="extended")):
 		if tweet["id"] in seen_tweets: continue
 		json.dump(tweet, log); print("", file=log)
@@ -151,8 +156,7 @@ def stream_from_friends():
 	# This API doesn't, which means that tweets from private accounts are only seen in catchup.
 	for tweet in stream.statuses.filter(follow=",".join(str(f) for f in get_following()[0]), tweet_mode="extended"):
 		if tweet is Timeout:
-			# TODO: If it's been more than a minute, ping the timeline for any
-			# we missed.
+			catchup(10)
 			continue
 		if "id" not in tweet: continue # Not actually a tweet (and might be followed by the connection closing)
 		json.dump(tweet, log); print("", file=log)
