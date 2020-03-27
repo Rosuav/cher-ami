@@ -38,6 +38,7 @@ def fix_extended_tweet(tweet):
 		start, end = url["indices"]
 		tweet["full_text"] = tweet["full_text"][:start] + url["expanded_url"] + tweet["full_text"][end:]
 
+seen_tweets = set()
 def print_tweet(tweet, indent=""):
 	"""TODO:
 	* Convert URLs using display_url, but retain the expanded_url and react to clicks
@@ -45,9 +46,12 @@ def print_tweet(tweet, indent=""):
 	* Show tweet["source"] on request??
 	"""
 	try:
+		seen_tweets.add(tweet["id"])
+		if "retweeted_status" in tweet: seen_tweets.add(tweet["retweeted_status"]["id"])
 		fix_extended_tweet(tweet)
 		# TODO: If it's a poll, show the options, or at least show that it's a poll.
 		# (Polls should be shown as a form of media, same as attached images.)
+		# Check if polls look different in home_timeline vs stream??
 		if "retweeted_status" in tweet:
 			# Retweets have their own full_text, but it's often truncated. And
 			# yet, the "truncated" flag is False. Go figure.
@@ -74,12 +78,56 @@ def print_tweet(tweet, indent=""):
 		pprint(tweet)
 		raise
 
+def get_following(_cache={}):
+	if _cache.get("stale", 0) < time.time():
+		_cache["following"] = twitter.friends.ids()["ids"] + [my_id]
+		_cache["no_retweets"] = twitter.friendships.no_retweets.ids()
+		_cache["stale"] = time.time() + 900
+	return _cache["following"], _cache["no_retweets"]
+
 log = open("cher-ami.json", "a", buffering=1)
-seen_tweets = set()
+
+def interesting_tweet(tweet):
+	"""Figure out whether a tweet is 'interesting' or not
+
+	Interesting tweets get shown to the user. Uninteresting ones do not.
+	The exact rules are complicated but generally immaterial.
+	Returns (True, "some reason") or (False, "some reason")
+	"""
+	following, no_retweets = get_following()
+	if "retweeted_status" in tweet:
+		if not tweet["is_quote_status"] and tweet["retweeted_status"]["id"] in seen_tweets:
+			return False, "Retweet of something we've seen"
+		if tweet["user"]["id"] in no_retweets:
+			return False, "Retweet from a filtered-RTs user"
+		# Hopefully a quoting-retweet will still get shown.
+	if tweet["user"]["id"] == my_id: return True, "from me"
+	# I'm assuming that any reply to a tweet of mine will list me among the mentions.
+	if my_id in [m["id"] for m in tweet["entities"]["user_mentions"]]:
+		return True, "mentions me"
+	if tweet["user"]["id"] not in following:
+		# Can happen with the streaming API - replies to people I follow
+		# can be shown. I don't want them.
+		return False, "not from someone I follow"
+	if tweet["in_reply_to_user_id"] is None:
+		return True, "author followed and non-reply"
+	if tweet["in_reply_to_user_id"] == tweet["user"]["id"]:
+		# For self-replies, look for threads that start with something we would have
+		# looked at. If you reply to someone else, then reply to your own reply, that
+		# should be taken as a reply to the original someone else.
+		if tweet["in_reply_to_status_id"] in seen_tweets:
+			return True, "author followed and self-reply to shown tweet"
+		# ? I think this will work. If you aren't mentioning anyone else, it's probably
+		# a thread, not a reply to someone else. Ultimately, what I want to do is to
+		# ask "Would we have shown the tweet that this is a reply to?". I'm not sure
+		# why, but sometimes you are in your own mention list and sometimes not.
+		elif {m['id'] for m in tweet["entities"]["user_mentions"]} <= {tweet["user"]["id"]}:
+			return True, "author followed and pure self-reply"
+	return False, "no reason to display it"
+
 def catchup(count):
 	for tweet in reversed(twitter.statuses.home_timeline(count=count, tweet_mode="extended")):
 		if tweet["id"] in seen_tweets: continue
-		seen_tweets.add(tweet["id"])
 		json.dump(tweet, log); print("", file=log)
 		print_tweet(tweet)
 		print("-- accepted: catchup --", file=log)
@@ -98,47 +146,18 @@ def stream_from_friends():
 	# TODO: Notice if you follow/unfollow someone, and adjust this (or just return and re-call)
 	# TODO: Switch to the Labs API instead and see if it copes with private accounts.
 	# This API doesn't, which means that tweets from private accounts are only seen in catchup.
-	following = twitter.friends.ids()["ids"] + [my_id]
-	no_retweets = twitter.friendships.no_retweets.ids()
-	for tweet in stream.statuses.filter(follow=",".join(str(f) for f in following), tweet_mode="extended"):
+	for tweet in stream.statuses.filter(follow=",".join(str(f) for f in get_following()[0]), tweet_mode="extended"):
 		if tweet is Timeout:
 			# TODO: If it's been more than a minute, ping the timeline for any
 			# we missed.
 			continue
 		if "id" not in tweet: continue # Not actually a tweet (and might be followed by the connection closing)
 		json.dump(tweet, log); print("", file=log)
-		if "retweeted_status" in tweet:
-			if not tweet["is_quote_status"] and tweet["retweeted_status"]["id"] in seen_tweets:
-				continue # Ignore plain retweets where we've seen the original
-			if tweet["user"]["id"] in no_retweets: continue # User requested not to see their RTs
-			# Hopefully a quoting-retweet will still get shown.
-		# Figure out if this should be shown or not. If I sent it, show it.
-		# If someone I follow sent it and isn't a reply, show it. If it is
-		# a reply to something I sent, show it. If it mentions me, show it.
-		# Otherwise don't.
-		from_me = tweet["user"]["id"] == my_id
-		nonreply = tweet["in_reply_to_user_id"] is None
-		if tweet["in_reply_to_user_id"] == tweet["user"]["id"]:
-			# For self-replies, look for threads that start with something we would have
-			# looked at. If you reply to someone else, then reply to your own reply, that
-			# should be taken as a reply to the original someone else.
-			if tweet["in_reply_to_status_id"] in seen_tweets: nonreply = True # Easy - we showed that one!
-			# ? I think this will work. If you aren't mentioning anyone else, it's probably
-			# a thread, not a reply to someone else. Ultimately, what I want to do is to
-			# ask "Would we have shown the tweet that this is a reply to?". I'm not sure
-			# why, but sometimes you are in your own mention list and sometimes not.
-			elif {m['id'] for m in tweet["entities"]["user_mentions"]} <= {tweet["user"]["id"]}:
-				nonreply = True
-		# I'm assuming that any reply to a tweet of mine will list me among the mentions.
-		mentions_me = my_id in [m["id"] for m in tweet["entities"]["user_mentions"]]
-		if from_me or mentions_me or (tweet["user"]["id"] in following and nonreply):
-			seen_tweets.add(tweet["id"])
-			if "retweeted_status" in tweet: seen_tweets.add(tweet["retweeted_status"]["id"])
-			print_tweet(tweet)
-			if from_me: print("-- accepted: from me --", file=log)
-			if mentions_me: print("-- accepted: mentions me --", file=log)
-			else: print("-- accepted: author followed and %s --" % "non-reply" if nonreply else "self-reply", file=log)
-	print("End of stream", time.time())
+		keep, why = interesting_tweet(tweet)
+		if not keep: continue
+		print_tweet(tweet)
+		print("-- accepted: %s --" % why, file=log) # Don't print the why for those we discard
+	# print("End of stream", time.time())
 
 def main():
 	catchup(25)
