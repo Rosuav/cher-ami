@@ -132,7 +132,7 @@ last_catchup = 0.0
 def catchup(count):
 	global last_catchup
 	t = time.time()
-	if t > last_catchup + 180: last_catchup = t
+	if t > last_catchup + 600: last_catchup = t
 	else: return # Been less than three minutes? No need to catch up.
 	for tweet in reversed(twitter.statuses.home_timeline(count=count, tweet_mode="extended")):
 		if tweet["id"] in seen_tweets: continue
