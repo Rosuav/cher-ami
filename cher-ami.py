@@ -28,15 +28,18 @@ def fix_extended_tweet(tweet):
 	if "extended_tweet" in tweet:
 		tweet.update(tweet["extended_tweet"])
 	if "full_text" not in tweet: tweet["full_text"] = tweet["text"]
-	# FIXME: This sometimes doesn't catch every URL - some are left as t.co. Watch for an example.
-	# TODO: Also catch media entries. The indices will need to be merged with URLs.
-	# (Can I assume they'll never overlap? If so, build a mapping start=>replacement, sort, go.)
-	# tweet->extended_entities->media[*]->indices
-	# tweet->extended_entities->media[*]->video_info->variants[0]->url
-	# What if there are multiple variants?
-	for url in reversed(tweet["entities"]["urls"]):
-		start, end = url["indices"]
-		tweet["full_text"] = tweet["full_text"][:start] + url["expanded_url"] + tweet["full_text"][end:]
+	replace = {url["indices"][0]: (url["indices"][1], url["expanded_url"]) for url in tweet["entities"]["urls"]}
+	for media in tweet.get("extended_entities", {}).get("media", ()):
+		if "video_info" in media:
+			# For videos, pick the best - currently just going for highest
+			# bitrate and hoping that quantity correlates with quality
+			url = max(media["video_info"]["variants"], key=lambda v: v.get("bitrate", 0))["url"]
+		else:
+			url = media["media_url_https"]
+		replace[media["indices"][0]] = (media["indices"][1], url)
+	for start in sorted(replace, reverse=True):
+		end, replacement = replace[start]
+		tweet["full_text"] = tweet["full_text"][:start] + replacement + tweet["full_text"][end:]
 
 seen_tweets = set()
 def print_tweet(tweet, indent=""):
