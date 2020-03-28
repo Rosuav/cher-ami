@@ -40,6 +40,14 @@ def fix_extended_tweet(tweet):
 	for start in sorted(replace, reverse=True):
 		end, replacement = replace[start]
 		tweet["full_text"] = tweet["full_text"][:start] + replacement + tweet["full_text"][end:]
+	# Twitter replaces <>& with entities, for some reason.
+	# NOTE: If a URL contains "&lt;" in it, Twitter breaks stuff. It kinda
+	# severs the URL but doesn't have any gap after it, so the only way for
+	# Cher Ami to get it even compatible with the Twitter UI (never mind
+	# "right") would be to add its own gap. For now, I'm going to assume
+	# that this won't ever happen; having "&lt=foo" is okay, and that's what
+	# you're more likely to see anyway.
+	tweet["full_text"] = tweet["full_text"].replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
 
 seen_tweets = set()
 def print_tweet(tweet, indent=""):
