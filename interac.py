@@ -15,7 +15,8 @@ def find(s):
 			if not line.startswith("{"): continue
 			tw = json.loads(line)
 			txt = tw.get("full_text", tw.get("text", ""))
-			if s in txt:
+			if s in txt if isinstance(s, str) else tw["id"] == s:
 				print("[%d]" % len(tweets), tw["created_at"], "@" + tw["user"]["screen_name"])
 				tweets.append(tw)
 				tweet = tw
+
