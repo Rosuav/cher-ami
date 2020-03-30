@@ -21,6 +21,7 @@ stream = TwitterStream(auth=auth, timeout=10)
 who_am_i = twitter.account.verify_credentials()
 my_id = who_am_i["id"]
 
+displayed_tweets = {}
 def fix_extended_tweet(tweet):
 	# Streaming mode doesn't include the full_text. It will show short tweets
 	# with just "text", and longer ones with an "extended_tweet" that includes
@@ -69,7 +70,10 @@ def print_tweet(tweet, indent=""):
 			fix_extended_tweet(tweet["retweeted_status"])
 			tweet["full_text"] = ("RT @" + tweet["retweeted_status"]["user"]["screen_name"]
 				+ ": " + tweet["retweeted_status"]["full_text"])
-		label = indent + "@" + tweet["user"]["screen_name"] + ": "
+		code = len(displayed_tweets) % 260
+		code = chr(code // 10 + 0x61) + chr(code % 10 + 0x30)
+		displayed_tweets[code] = tweet # Retain the tweet under its two-letter code reference
+		label = f"{indent}<{code}> @{tweet['user']['screen_name']}: "
 		wrapper = textwrap.TextWrapper(
 			initial_indent=label,
 			subsequent_indent=indent + " " * 12,
