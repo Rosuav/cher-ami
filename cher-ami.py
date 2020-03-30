@@ -4,6 +4,7 @@ import shutil
 import sys
 import textwrap
 import time
+import threading
 from pprint import pprint
 sys.path.append("../mustard-mine") # Hack: Lift credentials from Mustard Mine if we don't have our own
 from config import TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET
@@ -178,14 +179,34 @@ def stream_from_friends():
 		print("-- accepted: %s --" % why, file=log) # Don't print the why for those we discard
 	# print("End of stream", time.time())
 
+def stream_forever():
+	while True:
+		stream_from_friends()
+		# After disconnecting, do a timeline check to see if we missed any
+		catchup(10)
+
 def main():
 	catchup(25)
 	print("---------")
+	threading.Thread(target=stream_forever, daemon=True).start()
 	try:
 		while True:
-			stream_from_friends()
-			# After disconnecting, do a timeline check to see if we missed any
-			catchup(10)
+			cmd = input()
+			if cmd == "quit": break
+			elif cmd == "help": print("Type a tweet code to open it in a browser") # TODO: Or other actions?
+			elif cmd in displayed_tweets:
+				tweet = displayed_tweets[cmd]
+				# It seems that getting the username wrong doesn't even
+				# matter - Twitter will just redirect you.
+				url = "https://twitter.com/x/status/%s" % tweet["id"]
+				source = tweet.get("source", "<UNKNOWN>")
+				if source.startswith("<a"): # it usually will
+					source = source.split(">", 1)[1].replace("</a>", "")
+				print("Tweet from", tweet["user"]["screen_name"], "via", source)
+				import webbrowser
+				webbrowser.open(url)
+			else:
+				print("Unknown command", cmd, "-- 'help' for help")
 	except KeyboardInterrupt:
 		pass # Normal termination
 
