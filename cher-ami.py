@@ -38,7 +38,14 @@ def fix_extended_tweet(tweet):
 			url = max(media["video_info"]["variants"], key=lambda v: v.get("bitrate", 0))["url"]
 		else:
 			url = media["media_url_https"]
-		replace[media["indices"][0]] = (media["indices"][1], url)
+		# NOTE: If multiple images are attached to a tweet, they (might?) get
+		# the *same* indices. The spares just get tacked onto the end.
+		if media["indices"][0] in replace:
+			tweet["full_text"] += " "
+			p = len(tweet["full_text"])
+			replace[p] = (p, url) # Remove nothing, keep the space.
+		else:
+			replace[media["indices"][0]] = (media["indices"][1], url)
 	for start in sorted(replace, reverse=True):
 		end, replacement = replace[start]
 		tweet["full_text"] = tweet["full_text"][:start] + replacement + tweet["full_text"][end:]
