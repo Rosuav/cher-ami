@@ -72,7 +72,7 @@ def print_tweet(tweet, indent=""):
 		label = indent + "@" + tweet["user"]["screen_name"] + ": "
 		wrapper = textwrap.TextWrapper(
 			initial_indent=label,
-			subsequent_indent=" " * len(label),
+			subsequent_indent=indent + " " * 12,
 			width=shutil.get_terminal_size().columns,
 			break_long_words=False, break_on_hyphens=False, # Stop URLs from breaking
 		)
@@ -83,7 +83,7 @@ def print_tweet(tweet, indent=""):
 		# See if there's a difference between (a) clicking Retweet and then
 		# adding a message, and (b) clicking Tweet, and pasting in a tweet URL.
 		if "quoted_status" in tweet:
-			print_tweet(tweet["quoted_status"], indent=" " * len(label))
+			print_tweet(tweet["quoted_status"], indent=wrapper.subsequent_indent)
 	except Exception as e:
 		print("%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 		pprint(tweet)
