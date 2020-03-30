@@ -63,7 +63,6 @@ def print_tweet(tweet, indent=""):
 	"""TODO:
 	* Convert URLs using display_url, but retain the expanded_url and react to clicks
 	* Retain the ID. If the marker is clicked, open the tweet in a browser.
-	* Show tweet["source"] on request??
 	"""
 	try:
 		seen_tweets.add(tweet["id"])
