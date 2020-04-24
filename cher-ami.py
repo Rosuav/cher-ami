@@ -188,9 +188,13 @@ def stream_from_friends():
 
 def stream_forever():
 	while True:
-		stream_from_friends()
-		# After disconnecting, do a timeline check to see if we missed any
-		catchup(10)
+		try:
+			stream_from_friends()
+			# After disconnecting, do a timeline check to see if we missed any
+			catchup(10)
+		except twitter.api.TwitterHTTPError as e:
+			print(e)
+			time.sleep(30)
 
 def main():
 	catchup(25)
