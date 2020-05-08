@@ -82,6 +82,8 @@ def print_tweet(tweet, indent=""):
 		code = chr(code // 10 + 0x61) + chr(code % 10 + 0x30)
 		displayed_tweets[code] = tweet # Retain the tweet under its two-letter code reference
 		label = f"{indent}\x1b[32m\u2026{code}\u2026\x1b[0m @{tweet['user']['screen_name']}: "
+		# TODO: Measure the label in a way that ignores the escape codes (the tagged lines
+		# are coming up notably shorter than all others).
 		wrapper = textwrap.TextWrapper(
 			initial_indent=label,
 			subsequent_indent=indent + " " * 12,
