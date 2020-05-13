@@ -10,6 +10,7 @@ sys.path.append("../mustard-mine") # Hack: Lift credentials from Mustard Mine if
 from config import TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET
 from twitter import OAuth, Twitter, oauth_dance, read_token_file
 from twitter.stream import TwitterStream, Timeout, HeartbeatTimeout, Hangup
+from twitter.api import TwitterHTTPError
 
 CREDENTIALS_FILE = os.path.expanduser('~/.cherami-login')
 if not os.path.exists(CREDENTIALS_FILE):
@@ -194,7 +195,7 @@ def stream_forever():
 			stream_from_friends()
 			# After disconnecting, do a timeline check to see if we missed any
 			catchup(10)
-		except twitter.api.TwitterHTTPError as e:
+		except TwitterHTTPError as e:
 			print(e)
 			time.sleep(30)
 
