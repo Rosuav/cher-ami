@@ -82,9 +82,11 @@ def print_tweet(tweet, indent=""):
 		code = displayed_tweets[""] % 260
 		code = chr(code // 10 + 0x61) + chr(code % 10 + 0x30)
 		displayed_tweets[code] = tweet # Retain the tweet under its two-letter code reference
-		label = f"{indent}\x1b[32m\u2026{code}\u2026\x1b[0m @{tweet['user']['screen_name']}: "
-		# TODO: Measure the label in a way that ignores the escape codes (the tagged lines
-		# are coming up notably shorter than all others).
+		# NOTE: In order to make things line up nicely without having ANSI codes mess it up,
+		# we use a couple of Unicode private-use characters to represent an ellipsis and an
+		# escape code. It needs one character of width (for the ellipsis) and should count as
+		# such to the textwrap module (since it's one character here).
+		label = f"{indent}\U0010cc32{code}\U0010cc00 @{tweet['user']['screen_name']}: "
 		wrapper = textwrap.TextWrapper(
 			initial_indent=label,
 			subsequent_indent=indent + " " * 12,
@@ -92,7 +94,7 @@ def print_tweet(tweet, indent=""):
 			break_long_words=False, break_on_hyphens=False, # Stop URLs from breaking
 		)
 		for line in tweet["full_text"].splitlines():
-			print(wrapper.fill(line))
+			print(wrapper.fill(line).replace("\U0010cc32", "\x1b[32m\u2026").replace("\U0010cc00", "\u2026\x1b[0m"))
 			wrapper.initial_indent = wrapper.subsequent_indent # For subsequent lines, just indent them
 		# Some types of quoted tweets aren't currently getting shown properly.
 		# See if there's a difference between (a) clicking Retweet and then
