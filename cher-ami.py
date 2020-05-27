@@ -94,7 +94,10 @@ def print_tweet(tweet, indent=""):
 			break_long_words=False, break_on_hyphens=False, # Stop URLs from breaking
 		)
 		for line in tweet["full_text"].splitlines():
-			print(wrapper.fill(line).replace("\U0010cc32", "\x1b[32m\u2026").replace("\U0010cc00", "\u2026\x1b[0m"))
+			print(wrapper.fill(line)
+				.replace("\U0010cc32", "\x1b[32m\u2026") # Colour start
+				.replace("\U0010cc00", "\u2026\x1b[0m") # Colour end
+			)
 			wrapper.initial_indent = wrapper.subsequent_indent # For subsequent lines, just indent them
 		# Some types of quoted tweets aren't currently getting shown properly.
 		# See if there's a difference between (a) clicking Retweet and then
