@@ -120,7 +120,7 @@ def get_following(_cache={}):
 		_cache["stale"] = time.time() + 900
 	return _cache["following"], _cache["no_retweets"]
 
-log = open("cher-ami.json", "a", buffering=1)
+# log = open("cher-ami.json", "a", buffering=1)
 
 def interesting_tweet(tweet):
 	"""Figure out whether a tweet is 'interesting' or not
@@ -168,9 +168,9 @@ def catchup(count):
 	else: return # Been less than three minutes? No need to catch up.
 	for tweet in reversed(twitter.statuses.home_timeline(count=count, tweet_mode="extended")):
 		if tweet["id"] in seen_tweets: continue
-		json.dump(tweet, log); print("", file=log)
+		# json.dump(tweet, log); print("", file=log)
 		print_tweet(tweet)
-		print("-- accepted: catchup --", file=log)
+		# print("-- accepted: catchup --", file=log)
 
 def spam_requests(last):
 	# This would work, but the home_timeline API is rate-limited to 15 every 15 minutes.
@@ -191,11 +191,11 @@ def stream_from_friends():
 			catchup(10)
 			continue
 		if "id" not in tweet: continue # Not actually a tweet (and might be followed by the connection closing)
-		json.dump(tweet, log); print("", file=log)
+		# json.dump(tweet, log); print("", file=log)
 		keep, why = interesting_tweet(tweet)
 		if not keep: continue
 		print_tweet(tweet)
-		print("-- accepted: %s --" % why, file=log) # Don't print the why for those we discard
+		# print("-- accepted: %s --" % why, file=log) # Don't print the why for those we discard
 	# print("End of stream", time.time())
 
 def stream_forever():
@@ -204,7 +204,7 @@ def stream_forever():
 			stream_from_friends()
 			# After disconnecting, do a timeline check to see if we missed any
 			catchup(10)
-		except TwitterHTTPError as e:
+		except (TwitterHTTPError, urllib.error.URLError) as e:
 			print(e)
 			time.sleep(30)
 
