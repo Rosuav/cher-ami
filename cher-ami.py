@@ -1,3 +1,4 @@
+import code
 import json
 import os
 import shutil
@@ -214,11 +215,14 @@ def main():
 	catchup(25)
 	print("---------")
 	threading.Thread(target=stream_forever, daemon=True).start()
-	context = { }
+	interp = code.InteractiveConsole()
+	prefix = prompt = ""
 	try:
 		while True:
-			cmd = input()
+			cmd = prefix + input(prompt)
+			prefix = prompt = "" # One-time prefix and prompt - will be reactivated if needed
 			if cmd == "quit": break
+			elif cmd == "": continue
 			elif cmd == "help": print("Type a tweet code to open it in a browser") # TODO: Or other actions?
 			elif cmd == "bt":
 				# Show backtraces from all other threads - might help diagnose CPU load issues
@@ -229,15 +233,12 @@ def main():
 					print("Thread", thrd, "--->")
 					traceback.print_stack(frm)
 					print()
-					context["frm"] = frm
+					interp.locals["frm"] = frm
 			elif cmd.startswith("x "):
-				# TODO: Feed it to the standard REPL, with a mode switch
-				# if we look for continuation lines. I'm curious what
-				# frm.f_locals['self'].sock_timeout is when the spin happens.
-				try:
-					exec(cmd[2:], context)
-				except BaseException as e:
-					traceback.print_exception(e)
+				if interp.push(cmd[2:]):
+					# We need more text. Show the continuation prompt and send the
+					# next (one) line back into the REPL.
+					prefix, prompt = "x ", "... "
 			elif cmd in displayed_tweets:
 				tweet = displayed_tweets[cmd]
 				# It seems that getting the username wrong doesn't even
