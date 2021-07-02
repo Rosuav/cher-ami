@@ -186,11 +186,13 @@ def spam_requests(last):
 			last = tweet["id"]
 			print_tweet(tweet)
 
+report_status = False
 def stream_from_friends():
 	# TODO: Notice if you follow/unfollow someone, and adjust this (or just return and re-call)
 	# TODO: Switch to the Labs API instead and see if it copes with private accounts.
 	# This API doesn't, which means that tweets from private accounts are only seen in catchup.
 	for tweet in stream.statuses.filter(follow=",".join(str(f) for f in get_following()[0]), tweet_mode="extended"):
+		if report_status: print("Yielded:", tweet)
 		if tweet is Timeout:
 			catchup(10)
 			continue
@@ -235,6 +237,10 @@ def main():
 					traceback.print_stack(frm)
 					print()
 					interp.locals["frm"] = frm
+			elif cmd == "report":
+				global report_status
+				report_status = not report_status
+				print("Will %s report yielded values." % ["not", "now"][report_status])
 			elif cmd.startswith("x "):
 				if interp.push(cmd[2:]):
 					# We need more text. Show the continuation prompt and send the
