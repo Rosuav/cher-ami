@@ -214,17 +214,30 @@ def main():
 	catchup(25)
 	print("---------")
 	threading.Thread(target=stream_forever, daemon=True).start()
+	context = { }
 	try:
 		while True:
 			cmd = input()
 			if cmd == "quit": break
 			elif cmd == "help": print("Type a tweet code to open it in a browser") # TODO: Or other actions?
 			elif cmd == "bt":
-				# Show backtraces from all threads - might help diagnose CPU load issues
+				# Show backtraces from all other threads - might help diagnose CPU load issues
+				# Normally that's just the stream_forever thread.
+				me = threading.current_thread().ident
 				for thrd, frm in sys._current_frames().items():
+					if thrd == me: continue
 					print("Thread", thrd, "--->")
 					traceback.print_stack(frm)
 					print()
+					context["frm"] = frm
+			elif cmd.startswith("x "):
+				# TODO: Feed it to the standard REPL, with a mode switch
+				# if we look for continuation lines. I'm curious what
+				# frm.f_locals['self'].sock_timeout is when the spin happens.
+				try:
+					exec(cmd[2:], context)
+				except BaseException as e:
+					traceback.print_exception(e)
 			elif cmd in displayed_tweets:
 				tweet = displayed_tweets[cmd]
 				# It seems that getting the username wrong doesn't even
