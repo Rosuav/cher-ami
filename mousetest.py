@@ -48,6 +48,7 @@ try:
 				continue
 			else:
 				print("Unknown CSI", command)
+				continue
 		print(ascii(ch))
 		if ch == "q" or ch == b"q": break
 finally:
