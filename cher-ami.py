@@ -5,6 +5,7 @@ import sys
 import textwrap
 import time
 import threading
+import urllib
 from pprint import pprint
 sys.path.append("../mustard-mine") # Hack: Lift credentials from Mustard Mine if we don't have our own
 from config import TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET
