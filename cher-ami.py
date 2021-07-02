@@ -5,6 +5,7 @@ import sys
 import textwrap
 import time
 import threading
+import traceback
 import urllib
 from pprint import pprint
 sys.path.append("../mustard-mine") # Hack: Lift credentials from Mustard Mine if we don't have our own
@@ -218,6 +219,12 @@ def main():
 			cmd = input()
 			if cmd == "quit": break
 			elif cmd == "help": print("Type a tweet code to open it in a browser") # TODO: Or other actions?
+			elif cmd == "bt":
+				# Show backtraces from all threads - might help diagnose CPU load issues
+				for thrd, frm in sys._current_frames().items():
+					print("Thread", thrd, "--->")
+					traceback.print_stack(frm)
+					print()
 			elif cmd in displayed_tweets:
 				tweet = displayed_tweets[cmd]
 				# It seems that getting the username wrong doesn't even
