@@ -1,6 +1,7 @@
 import code
 import json
 import os
+import readline
 import shutil
 import sys
 import textwrap
