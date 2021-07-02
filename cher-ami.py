@@ -22,7 +22,7 @@ if not os.path.exists(CREDENTIALS_FILE):
 
 auth = OAuth(*read_token_file(CREDENTIALS_FILE), TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET)
 twitter = Twitter(auth=auth)
-stream = TwitterStream(auth=auth, timeout=10)
+stream = TwitterStream(auth=auth, timeout=60)
 
 who_am_i = twitter.account.verify_credentials()
 my_id = who_am_i["id"]
