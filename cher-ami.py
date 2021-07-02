@@ -77,9 +77,9 @@ def print_tweet(tweet, indent=""):
 		# (Polls should be shown as a form of media, same as attached images.)
 		# Check if polls look different in home_timeline vs stream??
 		displayed_tweets[""] += 1
-		code = displayed_tweets[""] % 260
-		code = chr(code // 10 + 0x61) + chr(code % 10 + 0x30)
-		displayed_tweets[code] = tweet # Retain the tweet under its two-letter code reference
+		ref = displayed_tweets[""] % 260
+		ref = chr(ref // 10 + 0x61) + chr(ref % 10 + 0x30)
+		displayed_tweets[ref] = tweet # Retain the tweet under its two-letter code reference
 		if "retweeted_status" in tweet:
 			# Retweets have their own full_text, but it's often truncated. And
 			# yet, the "truncated" flag is False. Go figure.
@@ -89,12 +89,12 @@ def print_tweet(tweet, indent=""):
 			# For retweets, retain the retweeted tweet rather than the retweet.
 			# This means, for instance, that attempting to open it in a browser will show
 			# the original, not the retweet.
-			displayed_tweets[code] = tweet["retweeted_status"]
+			displayed_tweets[ref] = tweet["retweeted_status"]
 		# NOTE: In order to make things line up nicely without having ANSI codes mess it up,
 		# we use a couple of Unicode private-use characters to represent an ellipsis and an
 		# escape code. It needs one character of width (for the ellipsis) and should count as
 		# such to the textwrap module (since it's one character here).
-		label = f"{indent}\U0010cc32{code}\U0010cc00 @{tweet['user']['screen_name']}: "
+		label = f"{indent}\U0010cc32{ref}\U0010cc00 @{tweet['user']['screen_name']}: "
 		wrapper = textwrap.TextWrapper(
 			initial_indent=label,
 			subsequent_indent=indent + " " * 12,
