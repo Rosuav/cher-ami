@@ -218,7 +218,7 @@ def main():
 	catchup(25)
 	print("---------")
 	threading.Thread(target=stream_forever, daemon=True).start()
-	interp = code.InteractiveConsole()
+	interp = code.InteractiveConsole({"tweet": displayed_tweets})
 	prefix = prompt = ""
 	try:
 		while True:
@@ -257,9 +257,6 @@ def main():
 				print("Tweet from", tweet["user"]["screen_name"], "via", source)
 				import webbrowser
 				webbrowser.open(url)
-			# TODO: Command "-i z9" (or something) to spawn a new terminal with
-			# "python3 -i interac.py" and feed it the tweet somehow (arg?)
-			# And also have it print out the acceptance reason for that tweet.
 			else:
 				print("Unknown command", cmd, "-- 'help' for help")
 	except (KeyboardInterrupt, EOFError):
