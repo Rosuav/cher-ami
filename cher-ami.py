@@ -262,7 +262,7 @@ def main():
 			# And also have it print out the acceptance reason for that tweet.
 			else:
 				print("Unknown command", cmd, "-- 'help' for help")
-	except KeyboardInterrupt:
+	except (KeyboardInterrupt, EOFError):
 		pass # Normal termination
 
 if __name__ == "__main__": main()
