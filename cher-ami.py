@@ -216,6 +216,7 @@ def stream_forever():
 
 def main():
 	catchup(25)
+	return # The streaming API has been shut down. I could just have a periodic poll but by terminating, we make it occasional instead.
 	print("---------")
 	threading.Thread(target=stream_forever, daemon=True).start()
 	interp = code.InteractiveConsole({"tweet": displayed_tweets})
