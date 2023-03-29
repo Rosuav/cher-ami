@@ -170,19 +170,21 @@ def catchup(count):
 	t = time.time()
 	if t > last_catchup + 600: last_catchup = t
 	else: return # Been less than three minutes? No need to catch up.
+	lastid = None
 	for tweet in reversed(twitter.statuses.home_timeline(count=count, tweet_mode="extended")):
+		lastid = tweet["id"]
 		if tweet["id"] in seen_tweets: continue
 		# json.dump(tweet, log); print("", file=log)
 		print_tweet(tweet)
 		# print("-- accepted: catchup --", file=log)
+	return lastid
 
 def spam_requests(last):
 	# This would work, but the home_timeline API is rate-limited to 15 every 15 minutes.
 	# So at best, we could get a 60-secondly poll.
 	while True:
-		print("---------")
-		time.sleep(5)
-		for tweet in reversed(twitter.statuses.home_timeline(since_id=last, count=2, tweet_mode="extended")):
+		time.sleep(120)
+		for tweet in reversed(twitter.statuses.home_timeline(since_id=last, count=25, tweet_mode="extended")):
 			last = tweet["id"]
 			print_tweet(tweet)
 
@@ -215,10 +217,9 @@ def stream_forever():
 			time.sleep(30)
 
 def main():
-	catchup(25)
-	return # The streaming API has been shut down. I could just have a periodic poll but by terminating, we make it occasional instead.
+	lastid = catchup(25)
 	print("---------")
-	threading.Thread(target=stream_forever, daemon=True).start()
+	threading.Thread(target=spam_requests, args=(lastid,), daemon=True).start()
 	interp = code.InteractiveConsole({"tweet": displayed_tweets})
 	prefix = prompt = ""
 	try:
