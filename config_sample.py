@@ -8,3 +8,4 @@ TWITTER_CLIENT_SECRET = "..."
 MASTODON_SERVER = "https://mastodon.social" # Change if needed
 MASTODON_CLIENT_ID = "..." # The register-app subcommand will generate these
 MASTODON_CLIENT_SECRET = "..."
+MASTODON_ACCESS_TOKEN = "..." # The login subcommand will generate this

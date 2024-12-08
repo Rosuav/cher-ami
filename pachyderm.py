@@ -26,6 +26,30 @@ def register_app(*, appname="", website=""):
 		print("MASTODON_CLIENT_SECRET = %r" % ret["client_secret"], file=f)
 	print("Saved to config.py, edit as needed.")
 
+@command
+def login():
+	if config.MASTODON_CLIENT_ID == "...":
+		print("Register an app first with the register-app subcommand")
+		return
+	import webbrowser
+	webbrowser.open(config.MASTODON_SERVER + "/oauth/authorize?client_id=" + config.MASTODON_CLIENT_ID +
+		"&scope=read&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code")
+	code = input("Enter the authorization code: ")
+	r = requests.post(config.MASTODON_SERVER + "/oauth/token", json={
+		"client_id": config.MASTODON_CLIENT_ID,
+		"client_secret": config.MASTODON_CLIENT_SECRET,
+		"redirect_uri": "urn:ietf:wg:oauth:2.0:oob",
+		"grant_type": "authorization_code",
+		"code": code,
+		"scope": "read",
+	})
+	r.raise_for_status()
+	ret = r.json()
+	import pprint; pprint.pprint(ret)
+	with open("config.py", "a") as f:
+		print("MASTODON_ACCESS_TOKEN = %r" % ret["access_token"], file=f)
+	print("Saved to config.py, edit as needed.")
+
 if __name__ == "__main__":
 	try: clize.run(commands)
 	except KeyboardInterrupt: pass
