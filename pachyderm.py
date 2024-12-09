@@ -76,6 +76,7 @@ def mastodon(method, uri, json=None):
 @command
 def timeline():
 	ret = mastodon("GET", "/api/v1/timelines/home")
+	#ret = [] # or hack, skip the initial fetch
 	for message in ret:
 		print("\n\x1b[1m%s\x1b[0m" % message["account"]["display_name"])
 		# Unfortunately there's no way to get the plain text of the status.
@@ -86,7 +87,11 @@ def timeline():
 		print(h2t.text.strip())
 		for at in message["media_attachments"]:
 			print(at["url"])
-		
+	# TODO: Start listening for updates
+	# Will require asyncio or equivalent.
+	import websocket # ImportError? Try: pip install websocket-client
+	ws = websocket.create_connection(config.MASTODON_SERVER.replace("https://", "wss://") + "/api/v1/streaming")
+	print(ws)
 
 if __name__ == "__main__":
 	try: clize.run(commands)
