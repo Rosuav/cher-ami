@@ -1,5 +1,6 @@
 # What happens when a pigeon needs to become a pachyderm?
 # Enter Mastodon support.
+from html.parser import HTMLParser
 import requests
 import clize
 import config # ImportError? Copy config_sample.py to config.py and modify as needed.
@@ -45,10 +46,47 @@ def login():
 	})
 	r.raise_for_status()
 	ret = r.json()
-	import pprint; pprint.pprint(ret)
 	with open("config.py", "a") as f:
 		print("MASTODON_ACCESS_TOKEN = %r" % ret["access_token"], file=f)
 	print("Saved to config.py, edit as needed.")
+
+# Features still wanted:
+# Real-time notification of updates from any followed user
+# DMs as they arrive - see "direct" timeline possibly?
+
+class HTMLtoText(HTMLParser):
+	def __init__(self):
+		super().__init__()
+		self.text = ""
+	def handle_starttag(self, tag, attrs):
+		if tag == "p": self.text += "\n\n"
+		if tag == "br": self.text += "\n"
+
+	def handle_data(self, data):
+		self.text += data
+
+def mastodon(method, uri, json=None):
+	r = requests.request(method, config.MASTODON_SERVER + uri,
+		headers={"Authorization": "Bearer " + config.MASTODON_ACCESS_TOKEN},
+		json=json
+	)
+	r.raise_for_status()
+	return r.json()
+
+@command
+def timeline():
+	ret = mastodon("GET", "/api/v1/timelines/home")
+	for message in ret:
+		print("\n\x1b[1m%s\x1b[0m" % message["account"]["display_name"])
+		# Unfortunately there's no way to get the plain text of the status.
+		# Instead we have to parse it out of the HTML, which for some reason
+		# is the fundamental source of truth.
+		h2t = HTMLtoText()
+		h2t.feed(message["content"])
+		print(h2t.text.strip())
+		for at in message["media_attachments"]:
+			print(at["url"])
+		
 
 if __name__ == "__main__":
 	try: clize.run(commands)
